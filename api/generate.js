@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   }
 
   const keyword = req.body.keyword || "No keyword provided";
-  const token = process.env.QIANFAN_TOKEN; // ✅ 从 Vercel 环境变量读取 AppBuilder Token
+  const token = process.env.QIANFAN_TOKEN;
 
   if (!token) {
     return res.status(500).json({ error: "Missing QIANFAN_TOKEN environment variable" });
@@ -20,12 +20,11 @@ export default async function handler(req, res) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          stream: false, // 不需要流式返回
+          stream: false,
           parameters: {
             _sys_origin_query: keyword,
             _sys_file_urls: {},
-            _sys_conversation_id: "conversation_001",
-            _sys_end_user_id: "mystictiming_user_001",
+            _sys_end_user_id: "mystictiming_user",
             _sys_chat_history: [
               { role: "user", content: keyword }
             ],
@@ -35,7 +34,7 @@ export default async function handler(req, res) {
       }
     );
 
-    const text = await response.text(); // ⚠️ 先取 text，防止 JSON 解析报错
+    const text = await response.text();
     let data;
     try {
       data = JSON.parse(text);
