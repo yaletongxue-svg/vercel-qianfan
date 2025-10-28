@@ -11,22 +11,22 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(
-      'https://appbuilder.baidu.com/v2/tools/components/c-wf-13ebc135-326f-47b6-b713-ba2373d8b095/version/2/mcp',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          input: keyword  // ✅ 直接传 input
-        })
-      }
-    );
+    const response = await fetch('https://appbuilder.baidu.com/v1/workflow/trigger', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        workflow_id: 'wf-13ebc135-326f-47b6-b713-ba2373d8b095', // ✅ 用你的 workflow id
+        input: {
+          keyword: keyword
+        }
+      })
+    });
 
     const data = await response.json();
-    return res.status(200).json(data);
+    return res.status(200).json({ fromQianfan: data });
   } catch (error) {
     console.error("Error:", error);
     return res.status(500).json({ error: "Internal Server Error", detail: error.message });
