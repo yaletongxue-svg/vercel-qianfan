@@ -1,19 +1,13 @@
 export default async function handler(req, res) {
-  console.log("📩 Request received:", req.method);
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Only POST allowed' });
   }
 
   const input = req.body.keyword || 'No keyword received';
-  console.log("🧠 Input keyword:", input);
-
   const token = process.env.QIANFAN_TOKEN;
+
   if (!token) {
-    console.error("❌ Missing QIANFAN_TOKEN environment variable");
     return res.status(500).json({ error: "Missing QIANFAN_TOKEN environment variable" });
-  } else {
-    console.log("✅ QIANFAN_TOKEN detected, length:", token.length);
   }
 
   try {
@@ -23,20 +17,16 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Appbuilder-Token': token
+          'Authorization': `Bearer ${token}` // ✅ 关键改动
         },
-        body: JSON.stringify({ input: input })
+        body: JSON.stringify({ input })
       }
     );
 
-    console.log("🌐 Sent request to Qianfan API, waiting for response...");
-
-    const data = await response.text(); // 改为 text() 防止 JSON 解析出错
-    console.log("✅ Qianfan API response:", data);
-
-    return res.status(200).json({ fromQianfan: data });
+    const data = await response.json();
+    return res.status(200).json(data);
   } catch (error) {
-    console.error("🔥 Error occurred:", error);
+    console.error("Error:", error);
     return res.status(500).json({ error: "Internal Server Error", detail: error.message });
   }
 }
