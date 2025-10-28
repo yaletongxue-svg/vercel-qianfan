@@ -17,9 +17,14 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // ✅ 关键改动
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ input })
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: "test",
+          method: "invoke",
+          params: { input }
+        })
       }
     );
 
