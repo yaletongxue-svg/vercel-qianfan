@@ -1,5 +1,18 @@
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
+  // === 1. 处理预检请求（CORS 预检查） ===
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return res.status(204).end();
+  }
+
+  // === 2. 设置跨域头，允许外部调用（如秒哒） ===
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // === 3. 保留你原来的 POST 限制逻辑 ===
+  if (req.method !== 'POST') {
     return res.status(405).json({ error: "Only POST allowed" });
   }
 
@@ -12,7 +25,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      "https://qianfan.baidubce.com/v2/components/c-wf-130cb135-326f-4b76-b713-ba2373d8b056/version/latest?action=tool_eval",
+      "https://qianfan.baidu.com/v2/components/c-wf-130cb135-326f-4b76-b713-ba2373d8b056/version/latest?action=tool_eval",
       {
         method: "POST",
         headers: {
@@ -28,7 +41,7 @@ export default async function handler(req, res) {
             _sys_chat_history: [
               { role: "user", content: keyword }
             ],
-            input_variable_name: "keyword"
+            input_variable_name: "keyword",
           },
         }),
       }
@@ -42,7 +55,9 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Invalid JSON response", raw: text });
     }
 
+    // === 4. 返回带跨域头的正常响应 ===
     return res.status(200).json({ fromQianfan: data });
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Internal Server Error", detail: error.message });
