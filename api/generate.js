@@ -1,17 +1,18 @@
 export default async function handler(req, res) {
-  // === 1. 处理预检请求（CORS 预检查） ===
+  // ===== CORS 预检处理 =====
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    return res.status(204).end();
+    return res.status(200).end(); // 必须返回 200，否则浏览器仍视为失败
   }
 
-  // === 2. 设置跨域头，允许外部调用（如秒哒） ===
+  // ===== 全局 CORS 设置 =====
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
 
-  // === 3. 保留你原来的 POST 限制逻辑 ===
+  // ===== 只允许 POST 请求 =====
   if (req.method !== 'POST') {
     return res.status(405).json({ error: "Only POST allowed" });
   }
@@ -38,9 +39,7 @@ export default async function handler(req, res) {
             _sys_origin_query: keyword,
             _sys_file_urls: {},
             _sys_end_user_id: "mystictiming_user",
-            _sys_chat_history: [
-              { role: "user", content: keyword }
-            ],
+            _sys_chat_history: [{ role: "user", content: keyword }],
             input_variable_name: "keyword",
           },
         }),
@@ -49,17 +48,25 @@ export default async function handler(req, res) {
 
     const text = await response.text();
     let data;
+
     try {
       data = JSON.parse(text);
     } catch {
       return res.status(500).json({ error: "Invalid JSON response", raw: text });
     }
 
-    // === 4. 返回带跨域头的正常响应 ===
-    return res.status(200).json({ fromQianfan: data });
+    // ===== 正常响应 =====
+    return res.status(200).json({
+      ok: true,
+      source: "qianfan",
+      data,
+    });
 
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal Server Error", detail: error.message });
+    console.error("Server error:", error);
+    return res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
   }
 }
